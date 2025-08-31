@@ -1,0 +1,31 @@
+name: build-arducopter-pixhawk1
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'ArduCopter/**'
+      - 'libraries/**'
+      - 'wscript'
+      - '.github/workflows/build-pixhawk1.yml'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: Install prerequisites
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3 python3-pip git make gcc-arm-none-eabi binutils-arm-none-eabi
+        python3 -m pip install --user empy future pymavlink lxml
+    - name: Build
+      run: |
+        python3 waf distclean
+        python3 waf configure --board Pixhawk1
+        python3 waf copter -v
+    - name: Upload firmware
+      uses: actions/upload-artifact@v4
+      with:
+        name: arducopter-pixhawk1
+        path: build/Pixhawk1/bin/*.apj
